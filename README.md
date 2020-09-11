@@ -61,8 +61,11 @@ myVideo
     &lt;/script&gt; 
   &lt;/head&gt;
   &lt;body&gt;
-    &lt;video id="demo1" poster="https://3wa.tw/demo/htm/myVideo/demo1/20200911_1599757205758_1599753607320.png"&gt;
-      &lt;source src="https://3wa.tw/demo/htm/myVideo/demo1/20200911_1599757205758_1599753607320.mp4" type="video/mp4"&gt;
+    &lt;video id="demo1" 
+        poster="https://3wa.tw/demo/htm/myVideo/demo1/20200911_1599757205758_1599753607320.png"&gt;
+      &lt;source 
+        src="https://3wa.tw/demo/htm/myVideo/demo1/20200911_1599757205758_1599753607320.mp4" 
+        type="video/mp4"&gt;
     &lt;/video&gt;
   &lt;/body&gt;          
 </pre>
@@ -97,14 +100,17 @@ myVideo
   }
   
   //合併影片時，建議可以在 source 加一個參數，如 req_duration="471.388997"，如此可以加速載入速度
-  //duration 建議事先用 ffprobe 查詢，語法：ffprobe 20200911_1599793208459_1599789604914.mp4 -show_streams -select_streams v:0 -of json ooxx.mp4
+  //duration 建議事先用 ffprobe 查詢，語法：
+  ffprobe 20200911_1599793208459_1599789604914.mp4 -show_streams -select_streams v:0 -of json ooxx.mp4
   
   &lt;video id="demo1" 
           poster="https://3wa.tw/demo/htm/myVideo/demo1/20200911_1599757205758_1599753607320.png"&gt;    
     &lt;source req_duration="16.684" 
-          src="https://images.all-free-download.com/footage_preview/mp4/deer_animal_food_eating_bushes_474.mp4"&gt;
+          src="https://images.all-free-download.com/footage_preview/mp4/deer_animal_food_eating_bushes_474.mp4"
+          type="video/mp4"&gt;          
     &lt;source req_duration="10.544" 
-          src="https://images.all-free-download.com/footage_preview/mp4/bird_small_animal_feathers_river_679.mp4" type="video/mp4"&gt;
+          src="https://images.all-free-download.com/footage_preview/mp4/bird_small_animal_feathers_river_679.mp4" 
+          type="video/mp4"&gt;
   &lt;/video&gt;       
 </pre>
       </td>
