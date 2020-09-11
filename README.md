@@ -23,7 +23,10 @@ myVideo
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     Feather Mountain(羽山) <a target="_blank" href="http://3wa.tw">http://3wa.tw</a>
     <br>
-    版本：V 0.01<br>
+    版本：<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;V 0.01<br>
+    License：<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MIT License<br>
     官網：<br>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     <a target="_blank" href="http://3wa.tw/demo/htm/myVideo/">http://3wa.tw/demo/htm/myVideo/</a>
