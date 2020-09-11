@@ -17,6 +17,7 @@ myVideo
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     Feather Mountain(羽山) <a target="_blank" href="http://3wa.tw">http://3wa.tw</a>
     <br>
+    版本：V 0.01<br>
     官網：<br>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     <a target="_blank" href="http://3wa.tw/demo/htm/myVideo/">http://3wa.tw/demo/htm/myVideo/</a>
@@ -29,7 +30,7 @@ myVideo
     mybox 哥的播放機    <br>    
     Donwload：<br>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <a target="_blank" href="http://3wa.tw/inc/javascript/jquery/myVideo/myVideo-0.01.js">myVideo-0.01.js</a>
+    <a target="_blank" href="http://3wa.tw/inc/javascript/jquery/myVideo/myVideo-lastest.js">myVideo-lastest.js</a>
     &nbsp;&nbsp;
     <a target="_blank" href="http://3wa.tw/inc/javascript/jquery/myVideo/myVideo.css">myVideo.css</a>        
     <br>    
@@ -39,19 +40,76 @@ myVideo
     <br>
   </div>
   <h2 class="title">功能參數說明：</h2>
-  <table border="1" cellpadding="5" cellspacing="0">
-    <tbody>
+  <table border="1" cellpadding="5" cellspacing="0" class="thetable">
     <tr>
-      <th>參數或方法</th>
-      <th>名稱</th>
-      <th>說明</th>
+      <th><?=__("參數或方法");?></th>
+      <th><?=__("名稱");?></th>
+      <th><?=__("測試");?></th>
     </tr>
     <tr>
-      <th>使用方法(開啟)</th>
-      <td></td>
-      <td></td>    
-    </tr>              
-  </tbody></table>
+      <th><?=__("傳統用法");?></th>
+      <td>        
+<pre title='source_code' alt='source_code' id='source_code' class='comments'>
+  &lt;head&gt;
+    &lt;!--在 head 加入 --&gt;
+    &lt;script src="<?=$base_url;?>/inc/javascript/jquery/myVideo/myVideo-lastest.js"&gt;&lt;/script&gt;
+    &lt;link href="<?=$base_url;?>/inc/javascript/jquery/myVideo/myVideo.css" rel="stylesheet" type="text/css" /&gt;
+    &lt;script&gt;
+      $(document).ready(function(){
+        $("#demo1").myVideo();
+      });
+    &lt;/script&gt; 
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;video id="demo1" poster="<?=$base_url;?>/demo/htm/myVideo/demo1/20200911_1599757205758_1599753607320.png"&gt;
+      &lt;source src="<?=$base_url;?>/demo/htm/myVideo/demo1/20200911_1599757205758_1599753607320.mp4" type="video/mp4"&gt;
+    &lt;/video&gt;
+  &lt;/body&gt;          
+</pre>
+      </td>
+      <td>
+        <a target="_blank" href="demo1/index.html"><?=__('執行');?></a>
+      </td>
+    </tr>
+    <tr>
+      <th><?=__("基本參數");?>：</th>
+      <td>
+<pre title='source_code' alt='source_code' id='source_code' class='comments'>
+  {
+    'width': '320px', /*調整寬*/
+    'height':'240px', /*調整高*/
+    'merge': false    /*不合併*/
+  }        
+</pre>
+      </td>
+      <td>
+        <a target="_blank" href="demo2/index.html"><?=__('執行');?></a>
+      </td>
+    </tr>
+    <tr>
+      <th><?=__("參數說明");?>：</th>
+      <td>
+<pre title='source_code' alt='source_code' id='source_code' class='comments'>
+  {
+    'width': '320px', /*調整寬*/
+    'height':'240px', /*調整高*/
+    'merge': true     /* 合併 */
+  }
+  
+  //合併影片時，建議可以在 source 加一個參數，如 req_duration="471.388997"，如此可以加速載入速度
+  //duration 建議事先用 ffprobe 查詢，語法：ffprobe 20200911_1599793208459_1599789604914.mp4 -show_streams -select_streams v:0 -of json ooxx.mp4
+  
+  &lt;video id="demo1" poster="<?=$base_url;?>/demo/htm/myVideo/demo1/20200911_1599757205758_1599753607320.png"&gt;    
+    &lt;source req_duration="16.684" src="https://images.all-free-download.com/footage_preview/mp4/deer_animal_food_eating_bushes_474.mp4"&gt;
+    &lt;source req_duration="10.544" src="https://images.all-free-download.com/footage_preview/mp4/bird_small_animal_feathers_river_679.mp4" type="video/mp4"&gt;
+  &lt;/video&gt;       
+</pre>
+      </td>
+      <td>
+        <a target="_blank" href="demo3/index.html"><?=__('執行');?></a>
+      </td>
+    </tr>                     
+  </table>
   <h2 class="title">ChangeLog</h2>
   <div style="text-align:left;">
     <pre style="margin-left:20px;">
