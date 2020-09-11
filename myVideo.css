@@ -5,6 +5,8 @@
   width: 100%;  
   background-color: black;
   border:0px;
+  text-align:left;
+  font-size:14px;
 }
 .videoContainer .author_info{
   text-align:right;
@@ -310,9 +312,9 @@
   display:none;
   position:absolute;
   right:10px;
-  bottom:45px;
-  width:150px;
-  height:80px;
+  bottom:35px;
+  width:220px;
+  height:140px;
   border:1px solid #232323;
   border-radius:8px;
   background-color:rgba(35,35,35,0.7); 
