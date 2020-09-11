@@ -117,6 +117,7 @@
   width: 0;
   border:0;
   cursor:pointer;
+  transition:width 0.02s ease;
 }
 .videoContainer .control .progress-bar:before {
   width: 5px;
