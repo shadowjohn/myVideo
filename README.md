@@ -75,7 +75,7 @@ myVideo
       </td>
     </tr>
     <tr>
-      <th>基本參數：</th>
+      <th>基本參數</th>
       <td>
 <pre title='source_code' alt='source_code' id='source_code' class='comments'>
 {
@@ -90,7 +90,7 @@ myVideo
       </td>
     </tr>
     <tr>
-      <th>參數說明：</th>
+      <th>參數說明</th>
       <td>
 <pre title='source_code' alt='source_code' id='source_code' class='comments'>
 {
