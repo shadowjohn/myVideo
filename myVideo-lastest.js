@@ -323,7 +323,7 @@
           else
           {
             var ct = 0;
-            for(var i=0;i<now_playIndex-1;i++)
+            for(var i=0;i<now_playIndex;i++)
             {
               ct+=parseFloat(sources[i]['duration']);
             }
