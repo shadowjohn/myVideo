@@ -41,6 +41,7 @@
       var savedVolume = 0.8;
       var videoCurrentTime = 0;
       var videoDuration = 0;
+      var autoplayFixWidth = true;
       var allowBarChange = true;      
       var g = {
         "laba_on" : "<svg version=\"1.1\" id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" width=\"29px\" height=\"23px\" viewBox=\"0 0 29 23\" enable-background=\"new 0 0 29 23\" xml:space=\"preserve\">  <image id=\"image0\" width=\"29\" height=\"23\" x=\"0\" y=\"0\" \
@@ -323,7 +324,7 @@
           else
           {
             var ct = 0;
-            for(var i=0;i<now_playIndex-1;i++)
+            for(var i=0;i<now_playIndex;i++)
             {
               ct+=parseFloat(sources[i]['duration']);
             }
@@ -398,7 +399,7 @@
         var percent = 0;
         if(default_opts.merge==false)
         {
-          percent = videoCurrentTime / videoDuration;
+          percent = parseFloat(videoCurrentTime) / parseFloat(videoDuration);
         }
         else
         {
@@ -408,8 +409,8 @@
             ct+=parseFloat(sources[i]['duration']);
             //console.log("sources[i]['duration']:"+sources[i]['duration']);
           }
-          ct+= videoCurrentTime;
-          percent = ct / videoDuration;
+          ct+= parseFloat(videoCurrentTime);
+          percent = parseFloat(ct) / parseFloat(videoDuration);
           
           //console.log("videoTimeUpdateHandler ct:"+ct);
           //console.log("videoTimeUpdateHandler videoDuration:"+videoDuration);
@@ -424,7 +425,10 @@
             rate_change($(doms.js_video));                  
             break;
         }
-        updateProgressWidth(percent);           
+        if(autoplayFixWidth)
+        {
+          updateProgressWidth(percent);
+        }           
       }
       
       function scrubberMouseDownHandler(e) {
@@ -436,9 +440,13 @@
           var x = e.pageX - $this.offset().left;
           var percent = x / $this.width();
           doms.js_video.pause();
-          
+          autoplayFixWidth=false;
+          setTimeout(function(){
+            autoplayFixWidth=true;
+          },500);
           //videoToCanvas();          
           updateVideoTime(percent);
+          
           
         }
         e.stopPropagation();
@@ -541,7 +549,7 @@
                   //  canvasShowHide(false);                                    
                   //},500);
                   break;
-              }
+              }        
               allowBarChange=true;
               updateProgressWidth(percent);                        
             }
