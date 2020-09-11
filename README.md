@@ -42,12 +42,12 @@ myVideo
   <h2 class="title">功能參數說明：</h2>
   <table border="1" cellpadding="5" cellspacing="0" class="thetable">
     <tr>
-      <th><?=__("參數或方法");?></th>
-      <th><?=__("名稱");?></th>
-      <th><?=__("測試");?></th>
+      <th>參數或方法</th>
+      <th>名稱</th>
+      <th>測試</th>
     </tr>
     <tr>
-      <th><?=__("傳統用法");?></th>
+      <th>傳統用法</th>
       <td>        
 <pre title='source_code' alt='source_code' id='source_code' class='comments'>
   &lt;head&gt;
@@ -68,11 +68,11 @@ myVideo
 </pre>
       </td>
       <td>
-        <a target="_blank" href="demo1/index.html"><?=__('執行');?></a>
+        <a target="_blank" href="demo1/index.html">執行</a>
       </td>
     </tr>
     <tr>
-      <th><?=__("基本參數");?>：</th>
+      <th>基本參數：</th>
       <td>
 <pre title='source_code' alt='source_code' id='source_code' class='comments'>
   {
@@ -83,11 +83,11 @@ myVideo
 </pre>
       </td>
       <td>
-        <a target="_blank" href="demo2/index.html"><?=__('執行');?></a>
+        <a target="_blank" href="demo2/index.html">執行</a>
       </td>
     </tr>
     <tr>
-      <th><?=__("參數說明");?>：</th>
+      <th>參數說明：</th>
       <td>
 <pre title='source_code' alt='source_code' id='source_code' class='comments'>
   {
@@ -106,7 +106,7 @@ myVideo
 </pre>
       </td>
       <td>
-        <a target="_blank" href="demo3/index.html"><?=__('執行');?></a>
+        <a target="_blank" href="demo3/index.html">執行</a>
       </td>
     </tr>                     
   </table>
