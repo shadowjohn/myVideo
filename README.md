@@ -11,9 +11,11 @@ myVideo
   <h4>自製 HTML5 播放機 UI，可以調整播放速度、合併多個不同來源的 MP4 檔案合併時間軸接序播放，基於jQuery Plugin方式撰寫。</h4>
   <br>
   <br>
+  <div align="center" style="margin-left:auto;margin-right:auto;">
   <img src="snapshot/myVideo_1.png">
   <br>
   哥的播放機    
+  </div>
   <br>
   <h2 class="title">程式資訊：</h2>
   <div style="text-align:left;margin-left:50px;">
