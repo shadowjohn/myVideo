@@ -1,0 +1,347 @@
+.videoContainer {
+  position: relative;
+  margin:0px;
+  padding:0px;
+  width: 100%;  
+  background-color: black;
+  border:0px;
+}
+.videoContainer .author_info{
+  text-align:right;
+  font-size:14px;
+}
+.videoContainer video {  
+  width: 100%    !important;
+  height: 100%    !important;
+  display: block;  
+  border:0;
+}
+.videoContainer canvas {  
+  z-index:1;
+  position:absolute;
+  display: block;
+  left:2px;
+  top:2px;
+  border:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;     
+}
+/* ---- Controls ---- */
+.videoContainer .control {
+  width: 100%;
+  height: 30px;
+  background-color: #262626;
+  position: absolute;  
+  left: 0px;
+  bottom: -2px;
+  display: -webkit-box;
+  display: flex;
+  
+  z-index: 2147483647;
+  
+  /* ---- Progress ---- */
+}
+.videoContainer .control label {
+  display: block;
+  padding: 0px 10px;
+  color: white;
+  line-height: 30px;
+}
+.videoContainer .control a{
+  display: block;
+  width: 40px;
+  height: 30px;
+  color: #bebebe;
+  text-align: center;
+  text-decoration: none;
+  line-height: 30px;
+  position: relative;
+  cursor: pointer;
+  font-size: 14px;
+  outline: none;
+}
+.noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+}
+.videoContainer .control a:hover {
+  color: #33b5d5;
+  text-decoration: none;
+  /*background-color: #3f3f3f;*/
+}
+.videoContainer .control .play {
+  margin-right: 5px;
+}
+.videoContainer .control .progress_hover {
+  width: 100%;
+  height: 40px;
+  position: absolute;
+  left: 0px;
+  top: -30px;
+  opacity: 1;
+  overflow-x: hidden;
+  border:0;
+  background-color: rgba(255,0,0,0);      
+}
+.videoContainer .control .progress {
+  width: 100%;
+  height: 10px;
+  background: #1b1b1b;
+  box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.1);
+  float: left;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  position: absolute;
+  left: 0px;
+  top: 20px;
+  font-variant: normal;
+  opacity: 0.7;
+  overflow-x: hidden;
+  border:0;  
+}
+.videoContainer .control .progress-bar {
+  background: #33b5d5;
+  box-shadow: inset -30px 0px 69px -20px #33b5d5;
+  height: 100%;
+  position: relative;
+  z-index: 999;
+  width: 0;
+  border:0;
+  cursor:pointer;
+}
+.videoContainer .control .progress-bar:before {
+  width: 5px;
+  height: 10px;
+  top: 0px;
+  right: 0px;
+  content: " ";
+  background-color: #fff;
+  position: absolute;
+}
+.videoContainer .control .time {
+  color: #fff;
+  font-weight: bold;
+  font-size: 10px;
+  line-height: 30px;
+  width: 100px;
+}
+
+/* ----- Fullscreen ----- */
+.videoContainer .videoContainer:-webkit-full-screen {
+  width: 100%;
+  height: 100%;
+}
+.videoContainer .videoContainer:-ms-fullscreen {
+  width: 100%;
+  height: 100%;
+}
+.videoContainer .videoContainer:fullscreen {
+  width: 100%;
+  height: 100%;
+}
+
+.videoContainer .videoContainer:-ms-fullscreen {
+  width: 100%;
+  height: 100%;
+}
+
+.videoContainer .videoContainer:-webkit-full-screen {
+  width: 100%;
+  height: 100%;
+}
+
+.videoContainer video:-webkit-full-screen::media-controls-panel, video:-webkit-full-screen::media-controls, video:-webkit-full-screen::media-text-track-container {
+  display: none !important;
+  opacity: 0;
+}
+
+.videoContainer video:-ms-fullscreen::media-controls-panel, video:-ms-fullscreen::media-controls, video:-ms-fullscreen::media-text-track-container {
+  display: none !important;
+  opacity: 0;
+}
+
+.videoContainer video:fullscreen::media-controls-panel,
+.videoContainer video:fullscreen::media-controls,
+.videoContainer video:fullscreen::media-text-track-container {
+  display: none !important;
+  opacity: 0;
+}
+
+.videoContainer video:-ms-fullscreen::-ms-media-controls-panel,
+.videoContainer video:-ms-fullscreen::-ms-media-controls,
+.videoContainer video:-ms-fullscreen::-ms-media-text-track-container {
+  display: none !important;
+  opacity: 0;
+}
+
+.videoContainer video:-moz-full-screen::-moz-media-controls-panel,
+.videoContainer video:-moz-full-screen::-moz-media-controls,
+.videoContainer video:-moz-full-screen::-moz-media-text-track-container {
+  display: none !important;
+  opacity: 0;
+}
+
+.videoContainer video:-o-full-screen::-o-media-controls-panel,
+.videoContainer video:-o-full-screen::-o-media-controls,
+.videoContainer video:-o-full-screen::-o-media-text-track-container {
+  display: none !important;
+  opacity: 0;
+}
+
+.videoContainer video:-webkit-full-screen::-webkit-media-controls-panel,
+.videoContainer video:-webkit-full-screen::-webkit-media-controls,
+.videoContainer video:-webkit-full-screen::-webkit-media-text-track-container {
+  display: none !important;
+  opacity: 0;
+}
+
+.videoContainer .volume {
+  width: 40px;
+  margin-right:5px;
+  margin-left:5px;
+}
+
+
+/*
+.videoContainer .volume:hover {
+  background-color: #262626;
+}
+*/
+
+.videoContainer .volume a{
+  /* 聲音拉桿 */
+  width: 18px;
+  height: 18px;
+  z-index:15;
+} 
+
+.videoContainer .volume:hover .volume-piller {
+  display: block;
+}
+
+.videoContainer input[type='range']{ 
+  width: 50%;
+  height: 5px;
+  background-color: #333333;
+  border: 1px solid #83e584;
+  border-radius: 12px;
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+
+
+.videoContainer .volume-piller {
+  width: 120px;
+  height: 30px;
+  bottom: 3px;
+  left:185px;
+  line-height:0px;
+  border:0px solid #f00;
+  display: none;
+  overflow: visible;
+  position: absolute;  
+  /*z-index: 105100;*/
+  /*background-color: #262626;*/
+}
+
+.videoContainer .volume-slider {
+  position: relative;
+  margin: 0 auto;
+  height: 10px;
+  width: 100px;  
+  background-color: #1d1d1d;
+  border-radius: 10px;
+  top: 15px;
+}
+
+
+
+
+.videoContainer .videoContainer {
+  margin: 0 auto;
+  box-shadow: 0 2px 12px gray;
+}
+
+.videoContainer .fullscreen_div{
+  border:1px solid #fff;
+  width:18px;
+  height:15px;    
+  margin-top:6px;
+  margin-left:auto;
+  margin-right:auto;    
+  border-radius:3px;  
+}
+
+.videoContainer .toggle-sound svg{
+  margin-top:3px;
+  padding-left:4px;
+  width:22px;
+  opacity:0.9;
+}
+.videoContainer .right_div{
+  position:absolute;
+  right:0px;
+  display:inline;
+  width:50px;
+  height:30px;
+  border:0px solid #f00;  
+}
+
+/* setting */
+.videoContainer .setting {
+  position:absolute;
+  right:35px;
+  top:0px;
+  width: 35px;   
+  margin-right:5px;
+  margin-left:5px;
+}
+.videoContainer .setting svg{
+  width: 20px;  
+}
+.videoContainer .setting_div{
+  display:none;
+  position:absolute;
+  right:10px;
+  bottom:45px;
+  width:150px;
+  height:80px;
+  border:1px solid #232323;
+  border-radius:8px;
+  background-color:rgba(35,35,35,0.7); 
+  padding:5px 15px 5px 15px;
+}
+
+/* 播放速度 */
+.videoContainer .setting_div{
+  font-size:16px;
+  color:#fff;  
+}
+
+.videoContainer .play_speed_select{
+  background-color: #232323;
+  color:orange;
+  outline: none;
+  
+}
+
+.videoContainer .fullscreen{  
+  
+  position:absolute;
+  right:0px;
+  top:0px;
+  width: 35px;
+  margin-right:5px;
+  margin-left:5px;    
+}
+.videoContainer .fullscreen_div:hover{
+  border:2px solid #fff; 
+}
+/* 播放清單 */
