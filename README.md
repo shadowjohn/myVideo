@@ -130,6 +130,9 @@ ffprobe 20200911_1599793208459_1599789604914.mp4 -show_streams -select_streams v
       </td>
     </tr>                     
   </table>
+  <h2 class="title">參考資料</h2>
+  全螢幕寫法的 UI 不會被摭住：https://codepen.io/benjaminhoegh/pen/VQRGwx #benjaminhoegh
+  <br>
   <h2 class="title">ChangeLog</h2>
   <div style="text-align:left;">
     <pre style="margin-left:20px;">
