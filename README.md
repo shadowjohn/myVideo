@@ -21,17 +21,17 @@ myVideo
   <div style="text-align:left;margin-left:50px;">
     Author：<br>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    Feather Mountain(羽山) <a target="_blank" href="http://3wa.tw">http://3wa.tw</a>
+    Feather Mountain(羽山) <a target="_blank" href="https://3wa.tw">https://3wa.tw</a>
     <br>
     版本：<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;V 0.01<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;V 0.04<br>
     最後更新時間：<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2020-09-11 13:12<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2023-10-17 02:41<br>
     License：<br>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MIT License<br>
     官網：<br>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <a target="_blank" href="http://3wa.tw/demo/htm/myVideo/">http://3wa.tw/demo/htm/myVideo/</a>
+    <a target="_blank" href="https://3wa.tw/demo/htm/myVideo/">https://3wa.tw/demo/htm/myVideo/</a>
     <br>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     <a target="_blank" href="https://github.com/shadowjohn/myVideo">https://github.com/shadowjohn/myVideo</a>
@@ -41,9 +41,9 @@ myVideo
     mybox 哥的播放機    <br>    
     Donwload：<br>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <a target="_blank" href="http://3wa.tw/inc/javascript/jquery/myVideo/myVideo-lastest.js">myVideo-lastest.js</a>
+    <a target="_blank" href="https://3wa.tw/inc/javascript/jquery/myVideo/myVideo-lastest.js">myVideo-lastest.js</a>
     &nbsp;&nbsp;
-    <a target="_blank" href="http://3wa.tw/inc/javascript/jquery/myVideo/myVideo.css">myVideo.css</a>        
+    <a target="_blank" href="https://3wa.tw/inc/javascript/jquery/myVideo/myVideo.css">myVideo.css</a>        
     <br>    
     Key Word：<br>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -136,7 +136,17 @@ ffprobe 20200911_1599793208459_1599789604914.mp4 -show_streams -select_streams v
   <h2 class="title">ChangeLog</h2>
   <div style="text-align:left;">
     <pre style="margin-left:20px;">
-* Fri Sep 11 2020 Feather Mountain &lt;http://3wa.tw&gt; 0.01
+* Tus Oct 17 2023 Feather Mountain &lt;https://3wa.tw&gt; 0.04
+- 加入拖拉 Bar 的功能
+	
+* Mon Jul 17 2023 Feather Mountain &lt;https://3wa.tw&gt; 0.03
+- 加入 getSource 可以取影片清單
+- 加入操作事件
+	
+* Thu May 12 2022 Feather Mountain &lt;https://3wa.tw&gt; 0.02
+- 播放速度可以支援到 16x 但網路不夠快可能會卡頓
+	
+* Fri Sep 11 2020 Feather Mountain &lt;https://3wa.tw&gt; 0.01
 - First initial
     </pre>
   </div>
