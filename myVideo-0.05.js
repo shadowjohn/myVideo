@@ -556,7 +556,7 @@
             if (default_opts.merge && default_opts.event && timelineReady && total > 0) {
                 for (var i = 0; i < sources.length; i++) {
                     var events = sources[i].events;
-                    if (!$.isArray(events)) continue;
+                    if (!Array.isArray(events)) continue;
                     for (var j = 0; j < events.length; j++) {
                         var percent = Number(events[j].event_percent);
                         if (!isFinite(percent) || percent < 0 || percent > 1) continue;
