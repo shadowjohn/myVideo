@@ -362,3 +362,61 @@
   border:2px solid #fff; 
 }
 /* 播放清單 */
+/* V0.5：設定、觸控拖曳與載入狀態只作用於新版播放器。 */
+.videoContainer.myvideo-v05 .setting_div {
+  height: auto;
+  min-height: 0;
+  padding: 6px 10px;
+  font-size: 14px;
+  overflow-y: auto;
+  max-width: calc(100% - 20px);
+}
+.videoContainer.myvideo-v05 .control .myvideo-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  margin: 4px 0 0;
+  line-height: 22px;
+  font-size: 14px;
+  font-weight: normal;
+  cursor: pointer;
+}
+.videoContainer.myvideo-v05 .myvideo-option input {
+  margin: 0;
+}
+.videoContainer.myvideo-v05 .progress_hover {
+  touch-action: none;
+}
+.videoContainer.myvideo-v05 .myvideo-event-marker {
+  z-index: 1000;
+  width: 3px;
+  height: 100%;
+  background-color: orange;
+  position: absolute;
+  top: 0;
+}
+.videoContainer.myvideo-v05 .video-status {
+  position: absolute;
+  bottom: 42px;
+  left: 10px;
+  right: 10px;
+  padding: 8px 12px;
+  color: white;
+  background: rgba(0, 0, 0, 0.8);
+  font-size: 14px;
+  z-index: 2;
+  pointer-events: none;
+}
+.videoContainer.myvideo-v05:fullscreen,
+.videoContainer.myvideo-v05:-webkit-full-screen {
+  width: 100% !important;
+  height: 100% !important;
+}
+.videoContainer.myvideo-v05 .setting_div hr {
+  margin: 3px 0;
+}
+.videoContainer.myvideo-v05 .setting_div .author_info {
+  font-size: 12px;
+  line-height: 16px;
+}

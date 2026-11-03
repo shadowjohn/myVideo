@@ -1,25 +1,36 @@
 /*!
  * jQuery myVideo plugin
- * Version 0.4 (17-Oct-2023)
- * @requires jQuery v1.2.3 or later
+ * Version 0.5 (03-Nov-2026)
+ * @requires jQuery v1.7 or later
  *
  * Examples at: http://3wa.tw/demo/htm/myVideo
- * Copyright (c) 2020-2023 Feather Mountain (https://3wa.tw)
+ * Copyright (c) 2020-2026 Feather Mountain (https://3wa.tw)
  * licensed under the MIT
  * http://www.opensource.org/licenses/mit-license.php
- * 
+ *
  * Require:
  *  jQuery
- *  jQuery-UI
  * Special thanks to https://codepen.io/benjaminhoegh/pen/VQRGwx #benjaminhoegh
  */
 (function ($) {
+    var instanceId = 0;
     //From : https://stackoverflow.com/questions/1117086/how-to-create-a-jquery-plugin-with-methods
-    //From : https://sites.google.com/site/jwztrialanderror/home/javascript/how-to-build-jquery-plugin    
+    //From : https://sites.google.com/site/jwztrialanderror/home/javascript/how-to-build-jquery-plugin
 
     $.fn.myVideo = function (opts) {
+        if (opts === 'destroy') {
+            return this.each(function () {
+                var player = $(this).data('myVideo');
+                if (player) player.destroy();
+            });
+        }
+        if (this.length !== 1) return this.each(function () { $(this).myVideo(opts); });
+        var previous = this.data('myVideo');
+        if (previous) previous.destroy();
         var thIs = this;
-        var VERSION = 0.4;
+        var VERSION = 0.5;
+        var ns = '.myVideo' + (++instanceId);
+        var original = {src: this.attr('src'), poster: this.attr('poster'), preload: this.attr('preload'), controls: this.prop('controls'), loop: this.prop('loop')};
         var doms = {
             dom_videoContainer: null,
             js_video: null,
@@ -35,15 +46,34 @@
             videoWidth: 0,
             videoHeight: 0,
             merge: false,
-            event: false
+            event: false,
+            loop: true,
+            preloadNext: true,
+            loadTimeout: 15000
         };
         var now_playIndex = 0;
         var timer = null;
-        var savedVolume = 0.8;
+        var savedVolume = 100;
         var videoCurrentTime = 0;
         var videoDuration = 0;
-        var autoplayFixWidth = true;
-        var allowBarChange = true;
+        var totalDuration = 0;
+        var timelineReady = false;
+        var shouldPlay = false;
+        var switching = false;
+        var pendingTime = null;
+        var retryTime = 0;
+        var playbackError = false;
+        var playPending = false;
+        var playSequence = 0;
+        var sourceSequence = 0;
+        var loadTimer = null;
+        var preloadVideo = null;
+        var preloadIndex = -1;
+        var preloadFailedIndex = -1;
+        var preloadTimer = null;
+        var probes = [];
+        var destroyed = false;
+        var removalObserver = null;
         var g = {
             "laba_on": "<svg version=\"1.1\" id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" width=\"29px\" height=\"23px\" viewBox=\"0 0 29 23\" enable-background=\"new 0 0 29 23\" xml:space=\"preserve\">  <image id=\"image0\" width=\"29\" height=\"23\" x=\"0\" y=\"0\" \
                     href=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB0AAAAXCAQAAABdAYziAAAABGdBTUEAALGPC/xhBQAAACBjSFJN \
@@ -104,46 +134,45 @@
             run(thIs);
         }
         function init_ui(video_dom) {
-            video_dom.prop('controls', false);
-            video_dom.wrapAll("<div class=\"videoContainer\" />");
+            video_dom.prop('controls', false).prop('loop', false);
+            video_dom.wrapAll("<div class=\"videoContainer myvideo-v05\" />");
             doms.dom_videoContainer = video_dom.closest(".videoContainer").eq(0);
             doms.dom_videoContainer.append(" \
           <canvas class=\"canvas\"></canvas> \
           <div class=\"control\"> \
-    		    <a class=\"play video-play noselect\" title=\"播放/暫停\">►</a> \
-    		    <div class=\"progress_hover\"> \
+                <a class=\"play video-play noselect\" title=\"播放/暫停\">►</a> \
+                <div class=\"progress_hover\"> \
               <div class=\"progress\"> \
-    			     <div class=\"progress-bar\"></div> \
+                     <div class=\"progress-bar\"></div> \
                <div class=\"progress-event-bar\"></div> \
               </div> \
-    		    </div> \
-    		    <div class=\"time\"> \
-    			    <span class=\"ctime\">0:00</span> \
-    			    <span class=\"stime\"> / </span> \
-    			    <span class=\"ttime\">0:00</span> \
-    		    </div> \
-    		    <div class=\"volume\"> \
-    			    <a class=\"toggle-sound video-volume-high\" title=\"音量\"> \
+                </div> \
+                <div class=\"time\"> \
+                    <span class=\"ctime\">0:00</span> \
+                    <span class=\"stime\"> / </span> \
+                    <span class=\"ttime\">0:00</span> \
+                </div> \
+                <div class=\"volume\"> \
+                    <a class=\"toggle-sound video-volume-high\" title=\"音量\"> \
                 "+ g.laba_on + " \
               </a> \
-    			    <div class=\"volume-piller\"> \
-    				    <input type=\"range\" min=\"0\" max=\"100\" value=\"100\" class=\"volume-slider\"> \
-    			    </div> \
-    		    </div> \
+                    <div class=\"volume-piller\"> \
+                        <input type=\"range\" min=\"0\" max=\"100\" value=\"100\" class=\"volume-slider\"> \
+                    </div> \
+                </div> \
             <div class=\"right_div\"> \
               <div class=\"setting\"> \
                 <a class=\"video-setting noselect\" title=\"設定\"> \
                   "+ g.setting + " \
                 </a> \
               </div> \
-      		    <a reqc=\"airplay\" class=\"video-airplay\"></a> \
-      		    <a class=\"fullscreen video-fullscreen-enter\"> \
+                <a reqc=\"airplay\" class=\"video-airplay\"></a> \
+                <a class=\"fullscreen video-fullscreen-enter\"> \
                 <div class=\"fullscreen_div\" title=\"全螢幕\"></div> \
               </a> \
             </div> \
             <div class=\"setting_div noselect\"> \
               <div class=\"author_info\">myVideo - "+ VERSION + "</div> \
-              功能設定 \
               <hr> \
               播放速度： \
               <select class=\"play_speed_select\" reqc='play_speed_select'> \
@@ -155,9 +184,12 @@
                 <option value=\"0.75\">0.75</option> \
                 <option value=\"1\" selected>正常</option> \
               </select> \
+              <label class=\"myvideo-option\"><input type=\"checkbox\" class=\"loop-toggle\"> 循環播放</label> \
+              <label class=\"myvideo-option\"><input type=\"checkbox\" class=\"preload-toggle\"> 預載下一段</label> \
             </div> \
           </div> \
         </div>");
+            doms.dom_videoContainer.append('<div class="video-status" role="status" aria-live="polite" style="display:none"></div>');
             var m = new Array();
             for (var i = 1.25, max_i = 16; i <= max_i; i += 0.25) {
                 var d = "<option value=\"" + i + "\">" + i + "</option>";
@@ -168,572 +200,549 @@
             default_opts.orin_width = default_opts.width;
             default_opts.orin_height = default_opts.height;
             doms.js_video = video_dom[0];
-            //doms.ctx = doms.dom_videoContainer.find(".canvas")[0].getContext("2d");      
+            //doms.ctx = doms.dom_videoContainer.find(".canvas")[0].getContext("2d");
         }
         function init_events(video_dom) {
-            doms.dom_videoContainer.find(".canvas").unbind("click").click({ 'video_dom': video_dom }, function (e) {
-                video_dom.trigger("click");
+            var container = doms.dom_videoContainer;
+            container.find('.canvas').on('click' + ns, playVideo);
+            video_dom.on('click' + ns, playVideo);
+            container.find('.play').on('click' + ns, playVideo);
+            video_dom.on('mouseenter' + ns + ' mouseleave' + ns, function (e) {
+                video_dom.data('isHovered', e.type === 'mouseenter');
             });
-
-            //拉動喇叭
-            //From : https://jsfiddle.net/girlie_mac/GKY2A/
-            var p = doms.dom_videoContainer.find(".volume-slider")[0]
-            p.addEventListener("input", function () {
-                setVolume(parseFloat(p.value));
-            }, false);
-
-            setVolume(100); // Set default volume to 80%
-            video_dom.on('mouseenter mouseleave', function (e) {
-                $(this).data('isHovered', e.type === 'mouseenter');
+            container.find('.volume-slider').on('input' + ns, function () {
+                doms.js_video.muted = false;
+                setVolume(parseFloat(this.value));
             });
-            video_dom.click(function () {
-                playVideo();
-            });
-            // Play/Pause control clicked
-            doms.dom_videoContainer.find(".play").click(function () {
-                playVideo();
-            });
-            /*
-              播完繼續播下一個
-            */
-            video_dom.bind('ended', function (e) {
-                //play next song          
-                video_dom[0].pause();
-                //抓最後一個影格
-                //doms.ctx.globalAlpha=1;          
-                //doms.ctx.drawImage(doms.js_video, 0, 0, doms.dom_videoContainer.find(".canvas")[0].width, doms.dom_videoContainer.find(".canvas")[0].height);
-                //canvasShowHide(false);
-
-                allowBarChange = false;
-                now_playIndex = (now_playIndex + 1) % sources.length;
-                //change poster ?
-                video_dom.attr('poster', '');
-                //alert(now_playIndex);
-                doms.js_video.onloadstart = function () {
-                    video_dom[0].currentTime = 0;
-                    switch (doms.dom_videoContainer.find(".play").text()) {
-                        case '❚❚':
-                            doms.js_video.play();
-                            /*doms.ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-                            doms.ctx.fillRect(0, 0, 255, 255);
-                            doms.ctx.globalCompositeOperation = "lighter";
-                            doms.ctx.globalAlpha=0.5;
-                            */
-                            //hide white
-                            //setTimeout(function(){
-                            //canvasShowHide(false);
-                            //},500);                  
-                            break;
-                    }
-                    allowBarChange = true;
-                }
-                video_dom.attr('src', sources[now_playIndex]["url"]);
-            });
-            /*
-            * Setting
-            * ---------------------------------------
-            */
-            doms.dom_videoContainer.find('.setting').click({ "doms": doms }, function (e) {
-                e.data.doms.dom_videoContainer.find(".setting_div").toggle();
-            });
-            doms.dom_videoContainer.find('.play_speed_select').change({ "doms": doms }, function (e) {
-                //var rate = $(this).val();
-                //video_dom[0].playbackRate=rate;
-                rate_change($(doms.js_video));
-                doms.dom_videoContainer.find('.setting_div').fadeOut();
-            });
-            /*
-            * Animate controls
-            * --------------------------------------- 
-            */
-            doms.dom_videoContainer.mouseenter(function () {
-                showControls();
-            });
-            doms.dom_videoContainer.mouseleave(function () {
-                //hideControls();          
-            });
-            doms.dom_videoContainer.mousemove(function () {
-                viewContorls(3000);
-            });
-            /*
-            * Fullscreen
-            * --------------------------------------- 
-        */
-            doms.dom_videoContainer.find(".fullscreen").click(function () {
-                if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
-                    // exit full-screen
-                    doms.dom_videoContainer.find(".fullscreen").addClass('video-fullscreen-enter');
-                    doms.dom_videoContainer.find(".fullscreen").removeClass('video-fullscreen-exit');
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen();
-                    } else if (document.webkitExitFullscreen) {
-                        document.webkitExitFullscreen();
-                    } else if (document.mozCancelFullScreen) {
-                        document.mozCancelFullScreen();
-                    } else if (document.msExitFullscreen) {
-                        document.msExitFullscreen();
-                    }
-                    //resize(default_opts.orin_width,default_opts.orin_height);
-
-                } else if (document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled) {
-                    var i = doms.dom_videoContainer[0];
-
-                    doms.dom_videoContainer.find(".fullscreen").removeClass('video-fullscreen-enter');
-                    doms.dom_videoContainer.find(".fullscreen").addClass('video-fullscreen-exit');
-
-                    // go full-screen
-                    if (i.requestFullscreen) {
-                        i.requestFullscreen();
-                    } else if (i.webkitRequestFullscreen) {
-                        i.webkitRequestFullscreen();
-                    } else if (i.mozRequestFullScreen) {
-                        i.mozRequestFullScreen();
-                    } else if (i.msRequestFullscreen) {
-                        i.msRequestFullscreen();
-                    }
-
-                    //resize($(window).width(),$(window).height());
-                    //resize(0,0);
-
-                    //resize($(window).width(),$(window).height());
-                }
-            });
-            /*
-            * Progress time
-            * --------------------------------------- */
-            setInterval(function () {
-                videoCurrentTime = video_dom[0].currentTime;
-                // Update HTML5 video current play time
-                if (default_opts.merge == false) {
-                    //Math.round(
-                    doms.dom_videoContainer.find('.ctime').text(formatTime(videoCurrentTime));
-                }
-                else {
-                    var ct = 0;
-                    for (var i = 0; i < now_playIndex; i++) {
-                        ct += parseFloat(sources[i]['duration']);
-                    }
-                    ct += videoCurrentTime;
-                    //ct = Math.round(ct);
-                    doms.dom_videoContainer.find('.ctime').text(formatTime(ct));
-                }
-
-                // Get HTML5 video time duration
-                //doms.dom_videoContainer.find('.ttime').text(formatTime(videoDuration - Math.round(videoCurrentTime)));
-                doms.dom_videoContainer.find('.ttime').text(formatTime(videoDuration));
-            }, 500);
-            doms.dom_scrubber = doms.dom_videoContainer.find(".progress_hover");
-            doms.dom_progress = doms.dom_videoContainer.find(".progress-bar");
-
-            //doms.dom_event_progress = doms.dom_videoContainer.find(".progress-event-bar");
-
-
-            video_dom.bind("timeupdate", videoTimeUpdateHandler);
-            //這裡就是按下 progress-bar
-            doms.dom_scrubber.mousedown(scrubberMouseDownHandler);
-            
-            //可以拖移 progress-bar
-            var isMouseDownToDragging = false;
-            doms.dom_scrubber.bind("mousedown",function() {
-                isMouseDownToDragging = true;
-            }).mousemove(function(e) {
-                if(isMouseDownToDragging){
-                  scrubberMouseDownHandler(e);
-                }
-            }).mouseup(function() {
-                isMouseDownToDragging = false;                
-            });
-            /*
-            * Volume
-            * --------------------------------------- 
-            */
-
-            doms.dom_videoContainer.find(".volume a").click({ "video_dom": video_dom }, function (e) {
-                if (e.data.video_dom.prop('muted')) {
-                    e.data.video_dom.prop('muted', false);
+            container.find('.toggle-sound').on('click' + ns, function () {
+                if (doms.js_video.muted) {
+                    doms.js_video.muted = false;
                     setVolume(savedVolume);
                 } else {
-                    e.data.video_dom.prop('muted', true);
-                    savedVolume = e.data.video_dom[0].volume;
-                    setVolume(0);
+                    savedVolume = doms.js_video.volume * 100;
+                    doms.js_video.muted = true;
+                    syncVolume();
                 }
             });
-
-
-            /*
-            * Airplay
-            * --------------------------------------- */
-            //改成 reqc='airplay'
-            var airPlay = doms.dom_videoContainer.find("a[reqc='airplay']")[0];
-
-            if (window.WebKitPlaybackTargetAvailabilityEvent) {
-                doms.js_video.addEventListener('webkitplaybacktargetavailabilitychanged', function (event) {
-                    switch (event.availability) {
-                        case "available":
-                            airPlay.style.display = 'block';
-                            break;
-                        default:
-                            airPlay.style.display = 'none';
-                    }
-                    airPlay.addEventListener('click', function () {
-                        doms.js_video.webkitShowPlaybackTargetPicker();
-                    });
+            setVolume(doms.js_video.volume * 100);
+            video_dom.on('volumechange' + ns, syncVolume);
+            container.find('.setting').on('click' + ns, function () {
+                container.find('.setting_div').css('max-height', Math.max(70, container.height() - 40) + 'px').toggle();
+            });
+            container.find('.play_speed_select').on('change' + ns, function () {
+                rate_change(video_dom);
+            });
+            container.find('.loop-toggle').prop('checked', default_opts.loop).on('change' + ns, function () {
+                default_opts.loop = this.checked;
+                preloadNextVideo();
+            });
+            container.find('.preload-toggle').prop('checked', default_opts.preloadNext).on('change' + ns, function () {
+                default_opts.preloadNext = this.checked;
+                preloadFailedIndex = -1;
+                preloadNextVideo();
+            });
+            container.on('mouseenter' + ns + ' mousemove' + ns, function () { viewContorls(3000); });
+            container.find('.fullscreen').on('click' + ns, function () {
+                var element = container[0];
+                var result;
+                if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+                    var exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+                    if (exit) result = exit.call(document);
+                } else {
+                    var enter = element.requestFullscreen || element.webkitRequestFullscreen || element.mozRequestFullScreen || element.msRequestFullscreen;
+                    if (enter) result = enter.call(element);
+                }
+                if (result && result.catch) result.catch(function () { showStatus('無法進入全螢幕，請再試一次。'); });
+            });
+            $(document).on('fullscreenchange' + ns + ' webkitfullscreenchange' + ns, function () {
+                var full = document.fullscreenElement === container[0] || document.webkitFullscreenElement === container[0];
+                container.find('.fullscreen').toggleClass('video-fullscreen-enter', !full).toggleClass('video-fullscreen-exit', full);
+            });
+            doms.dom_scrubber = container.find('.progress_hover');
+            doms.dom_progress = container.find('.progress-bar');
+            var down = window.PointerEvent ? 'pointerdown' : 'mousedown';
+            var move = window.PointerEvent ? 'pointermove' : 'mousemove';
+            var up = window.PointerEvent ? 'pointerup' : 'mouseup';
+            var dragging = false;
+            var pointerId = null;
+            doms.dom_scrubber.on(down + ns, function (e) {
+                if (e.button != null && e.button !== 0) return;
+                dragging = true;
+                pointerId = e.originalEvent ? e.originalEvent.pointerId : e.pointerId;
+                scrubberMouseDownHandler(e);
+            });
+            $(document).on(move + ns, function (e) {
+                var id = e.originalEvent ? e.originalEvent.pointerId : e.pointerId;
+                if (dragging && (pointerId == null || id === pointerId)) scrubberMouseDownHandler(e);
+            }).on(up + ns + ' pointercancel' + ns, function (e) {
+                var id = e.originalEvent ? e.originalEvent.pointerId : e.pointerId;
+                if (pointerId == null || id === pointerId) dragging = false;
+            });
+            $(window).on('blur' + ns, function () { dragging = false; });
+            $(document).on('keyup' + ns, function (e) {
+                if (e.which !== 32 || $(e.target).is('input, select, textarea, button, [contenteditable]')) return;
+                var full = document.fullscreenElement === container[0] || document.webkitFullscreenElement === container[0];
+                if (full || video_dom.data('isHovered')) {
+                    e.preventDefault();
+                    playVideo();
+                    viewContorls(3000);
+                }
+            });
+            video_dom.on('loadedmetadata' + ns, function () {
+                if (destroyed || playbackError) return;
+                if (sources[now_playIndex] && sources[now_playIndex].duration == null && validDuration(this.duration)) {
+                    sources[now_playIndex].duration = this.duration;
+                    rebuildTimeline();
+                }
+                applyPendingSeek();
+            }).on('seeked' + ns + ' canplay' + ns, function () {
+                if (destroyed || playbackError) return;
+                if (pendingTime != null) applyPendingSeek();
+                if (pendingTime == null && !this.seeking && this.readyState >= 3) {
+                    switching = false;
+                    clearTimeout(loadTimer);
+                    loadTimer = null;
+                    showMetadataStatus();
+                    if (shouldPlay) safePlay();
+                    preloadNextVideo();
+                }
+                videoTimeUpdateHandler();
+            }).on('timeupdate' + ns, videoTimeUpdateHandler)
+              .on('play' + ns + ' playing' + ns + ' pause' + ns, function (e) {
+                if (e.type === 'pause' && this.paused && !this.ended && !this.seeking && !switching) shouldPlay = false;
+                if (e.type === 'playing' && !this.paused && !playbackError) {
+                    shouldPlay = true;
+                    clearTimeout(loadTimer);
+                    loadTimer = null;
+                }
+                syncPlayButton();
+            }).on('error' + ns, function () {
+                mediaFailed('第 ' + (now_playIndex + 1) + ' 段影片無法載入，請按播放重試。');
+            }).on('ended' + ns, function () {
+                if (destroyed || switching || !shouldPlay) return;
+                if (now_playIndex === sources.length - 1 && !default_opts.loop) {
+                    shouldPlay = false;
+                    syncPlayButton();
+                    videoTimeUpdateHandler();
+                    return;
+                }
+                changeSource((now_playIndex + 1) % sources.length, 0, true, true);
+            });
+            var airPlay = container.find("a[reqc='airplay']");
+            if (window.WebKitPlaybackTargetAvailabilityEvent && doms.js_video.webkitShowPlaybackTargetPicker) {
+                video_dom.on('webkitplaybacktargetavailabilitychanged' + ns, function (e) {
+                    airPlay.toggle(e.originalEvent.availability === 'available');
                 });
+                airPlay.on('click' + ns, function () { doms.js_video.webkitShowPlaybackTargetPicker(); });
             } else {
-                airPlay.style.display = 'none';
-            }
-            $(document).on('keyup', { "video_dom": video_dom }, function (e) {
-                //按到 ESC
-                if (e.which == 32) {
-                    var fullScreen = document.fullScreen || document.mozFullScreen || document.webkitIsFullScreen;
-                    var isHovered = e.data.video_dom.data('isHovered');
-
-                    if (fullScreen || isHovered) {
-                        playVideo();
-                        viewContorls(3000);
-                    }
-                }
-            });
-        }
-        function videoTimeUpdateHandler(e) {
-            //跳轉
-            //var percent = doms.js_video.currentTime / doms.js_video.duration;
-            var percent = 0;
-            if (default_opts.merge == false) {
-                percent = parseFloat(videoCurrentTime) / parseFloat(videoDuration);
-            }
-            else {
-                var ct = 0;
-
-
-                for (var i = 0; i < now_playIndex; i++) {
-                    ct += parseFloat(sources[i]['duration']);
-                    //console.log("sources[i]['duration']:"+sources[i]['duration']);            
-                }
-                ct += parseFloat(videoCurrentTime);
-                percent = parseFloat(ct) / parseFloat(videoDuration);
-
-                //console.log("videoTimeUpdateHandler ct:"+ct);
-                //console.log("videoTimeUpdateHandler videoDuration:"+videoDuration);
-                //console.log("videoTimeUpdateHandler percent:"+percent);
-            }
-            //console.log(percent);                                
-            //updateProgressWidth(percent);
-            switch (doms.dom_videoContainer.find(".play").text()) {
-                case '❚❚':
-                    doms.js_video.play();
-                    rate_change($(doms.js_video));
-                    break;
-            }
-            if (autoplayFixWidth) {
-                updateProgressWidth(percent);
+                airPlay.hide();
             }
         }
-
+        function validDuration(value) {
+            return typeof value === 'number' && isFinite(value) && value > 0;
+        }
+        function showStatus(message) {
+            if (destroyed) return;
+            doms.dom_videoContainer.find('.video-status').text(message).toggle(!!message);
+        }
+        function warn(message) {
+            if (window.console && window.console.warn) window.console.warn('myVideo: ' + message);
+        }
+        function showMetadataStatus() {
+            for (var i = 0; i < sources.length; i++) {
+                if (sources[i].metadataState === 'error' && !validDuration(sources[i].duration)) {
+                    showStatus('無法讀取第 ' + (i + 1) + ' 段長度，請按播放重試。');
+                    return;
+                }
+            }
+            showStatus('');
+        }
+        function syncPlayButton() {
+            if (destroyed) return;
+            var playing = !doms.js_video.paused && !doms.js_video.ended && !playbackError;
+            doms.dom_videoContainer.find('.play').text(playing ? '❚❚' : '►')
+                .toggleClass('video-play', !playing).toggleClass('video-pause', playing);
+        }
+        function safePlay() {
+            if (destroyed || !shouldPlay || playPending || playbackError) return;
+            if (!doms.js_video.paused && !doms.js_video.ended) return;
+            var sequence = ++playSequence;
+            rate_change($(doms.js_video));
+            playPending = true;
+            function failed(error) {
+                if (destroyed || sequence !== playSequence) return;
+                playPending = false;
+                if (error && error.name === 'AbortError') return;
+                mediaFailed('影片無法播放，請按播放重試。');
+            }
+            try {
+                var result = doms.js_video.play();
+                if (result && result.then) {
+                    result.then(function () {
+                        if (destroyed || sequence !== playSequence) return;
+                        playPending = false;
+                        syncPlayButton();
+                    }, failed);
+                } else {
+                    playPending = false;
+                }
+            } catch (error) { failed(error); }
+        }
+        function mediaFailed(message) {
+            if (destroyed || playbackError) return;
+            playbackError = true;
+            shouldPlay = false;
+            switching = false;
+            pendingTime = null;
+            playPending = false;
+            playSequence++;
+            clearTimeout(loadTimer);
+            loadTimer = null;
+            doms.js_video.pause();
+            showStatus(message);
+            syncPlayButton();
+            warn(message);
+        }
+        function changeSource(index, seconds, resume, force) {
+            if (destroyed || !sources[index]) return;
+            var reload = force || index !== now_playIndex || !doms.js_video.getAttribute('src');
+            var sequence = ++sourceSequence;
+            shouldPlay = resume;
+            switching = true;
+            playbackError = false;
+            playPending = false;
+            playSequence++;
+            pendingTime = Math.max(0, seconds);
+            retryTime = pendingTime;
+            doms.js_video.pause();
+            now_playIndex = index;
+            showStatus('');
+            clearTimeout(loadTimer);
+            loadTimer = setTimeout(function () {
+                if (!destroyed && sequence === sourceSequence) mediaFailed('第 ' + (index + 1) + ' 段影片載入逾時，請按播放重試。');
+            }, default_opts.loadTimeout);
+            if (reload) {
+                doms.js_video.src = sources[index].url;
+                doms.js_video.load();
+            } else if (doms.js_video.readyState >= 1) {
+                applyPendingSeek();
+            }
+            videoTimeUpdateHandler();
+            syncPlayButton();
+        }
+        function applyPendingSeek() {
+            if (pendingTime == null || doms.js_video.readyState < 1) return;
+            var time = pendingTime;
+            if (validDuration(doms.js_video.duration)) time = Math.min(time, doms.js_video.duration);
+            pendingTime = null;
+            try { doms.js_video.currentTime = time; }
+            catch (error) { mediaFailed('無法跳轉到指定時間，請按播放重試。'); return; }
+            if (!doms.js_video.seeking && doms.js_video.readyState >= 3) {
+                switching = false;
+                clearTimeout(loadTimer);
+                loadTimer = null;
+                if (shouldPlay) safePlay();
+            }
+        }
+        function videoTimeUpdateHandler() {
+            if (destroyed || !sources.length) return;
+            videoCurrentTime = pendingTime != null ? pendingTime : doms.js_video.currentTime;
+            var source = sources[now_playIndex];
+            var ct = videoCurrentTime;
+            videoDuration = default_opts.merge ? totalDuration : (source.duration || doms.js_video.duration);
+            if (default_opts.merge) ct = source.offset == null ? NaN : source.offset + Math.min(videoCurrentTime, source.duration || videoCurrentTime);
+            doms.dom_videoContainer.find('.ctime').text(formatTime(ct));
+            doms.dom_videoContainer.find('.ttime').text(formatTime(videoDuration));
+            updateProgressWidth(validDuration(videoDuration) ? ct / videoDuration : 0);
+        }
         function scrubberMouseDownHandler(e) {
-            if (e.target.tagName !== 'VIDEO') {
-                $(doms.js_video).attr('poster', '');
-                e.preventDefault();
-                //點到 時間 bar
-                var $this = doms.dom_videoContainer.find(".progress");
-                var x = e.pageX - $this.offset().left;
-                var percent = x / $this.width();
-                doms.js_video.pause();
-                autoplayFixWidth = false;
-                setTimeout(function () {
-                    autoplayFixWidth = true;
-                }, 500);
-                //videoToCanvas();          
-                updateVideoTime(percent);
-            }
+            if (destroyed || !validDuration(videoDuration)) return;
+            if (default_opts.merge && !timelineReady) return;
+            var bar = doms.dom_videoContainer.find('.progress');
+            var event = e.originalEvent || e;
+            var pageX = event.pageX != null ? event.pageX : e.pageX;
+            if (!isFinite(pageX) || !bar.width()) return;
+            e.preventDefault();
             e.stopPropagation();
-        }
-        function arduino_map(x, in_min, in_max, out_min, out_max) {
-            //x = 輸入值
-            //in 如 0~255
-            //out 如 0~1024
-            return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+            $(doms.js_video).attr('poster', '');
+            updateVideoTime((pageX - bar.offset().left) / bar.width());
         }
         function updateProgressWidth(percent) {
-            if (allowBarChange) {
-                doms.dom_progress.width((percent * 100) + "%");
-                //doms.dom_event_progress.width((percent * 100) + "%");
-            }
+            if (!doms.dom_progress) return;
+            percent = isFinite(percent) ? Math.max(0, Math.min(1, percent)) : 0;
+            doms.dom_progress.width((percent * 100) + '%');
         }
-        /*function videoToCanvas(){
-          doms.ctx.drawImage(doms.js_video, 0, 0, doms.dom_videoContainer.find(".canvas")[0].width, doms.dom_videoContainer.find(".canvas")[0].height);
-        }
-        function canvasShowHide(bool){
-          switch(bool)
-          {
-            case true:
-              doms.dom_videoContainer.find(".canvas").css({'opacity':1});
-              break;
-            default:
-              doms.dom_videoContainer.find(".canvas").css({'opacity':0});
-              break;
-          }
-        }
-        */
         function updateVideoTime(percent) {
-            //doms.js_video.currentTime = percent * doms.js_video.duration;
-            allowBarChange = false;
-            doms.js_video.pause();
-            //alert(percent);
-            //alert(videoDuration);
-            if (default_opts.merge == false) {
-                allowBarChange = false;
-                doms.js_video.currentTime = percent * videoDuration;
-                switch (doms.dom_videoContainer.find(".play").text()) {
-                    case '❚❚':
-                        doms.js_video.play();
-                        rate_change($(doms.js_video));
-                        break;
-                }
-                allowBarChange = true;
-                updateProgressWidth(percent);
-            }
-            else {
-
-                var ct = percent * videoDuration;
-                var sum = ct;
-                var index = 0;
-                //console.log("percent:"+percent);
-                //console.log("videoDuration:"+videoDuration);
-                //console.log("ct:"+ct);
-
-
-                for (var i = 0, max_i = sources.length; i < max_i; i++) {
-                    sum = sum - sources[i]['duration'];
-                    if (sum >= 0) {
-                        continue;
-                    }
-                    else {
-                        index = i;
-                        sum += sources[i]['duration'];
-                        break;
-                    }
-                }
-                /*doms.js_video.onloadeddata = function() {              
-                  doms.js_video.currentTime = sum;
-                }
-                */
-                if (index != now_playIndex) {
-                    //canvasShowHide(false);               
-                    doms.js_video.onloadstart = function () {
-                        // https://stackoverflow.com/questions/14904623/detect-aspect-ratio-html5-video   
-                        //default_opts.videoWidth = doms.js_video.videoWidth;
-                        //default_opts.videoHeight = doms.js_video.videoHeight;
-                        //get frame
-                        //doms.js_video.currentTime( sum ).capture();
-
-                        //console.log("sum:"+sum);
-                        //alert(sum);
-                        switch (doms.dom_videoContainer.find(".play").text()) {
-                            case '❚❚':
-                                doms.js_video.play();
-                                rate_change($(doms.js_video));
-                                doms.js_video.currentTime = sum;
-                                //canvasShowHide(false);                 
-                                break;
-                            default:
-                                //這樣才能真跳過畫面
-                                doms.js_video.play();
-                                rate_change($(doms.js_video));
-                                doms.js_video.currentTime = sum;
-                                doms.js_video.pause();
-                                //setTimeout(function(){
-                                //  canvasShowHide(false);                                    
-                                //},500);
-                                break;
-                        }
-                        allowBarChange = true;
-                        updateProgressWidth(percent);
-                    }
-                    now_playIndex = index;
-                    //console.log("now_playIndex:"+now_playIndex);
-                    allowBarChange = false;
-                    doms.js_video.pause();
-                    doms.js_video.src = sources[now_playIndex]['url'];
-                }
-                else {
-                    allowBarChange = false;
-                    doms.js_video.currentTime = sum;
-                    doms.js_video.pause();
-                    doms.js_video.currentTime = sum;
-                    switch (doms.dom_videoContainer.find(".play").text()) {
-                        case '❚❚':
-                            doms.js_video.play();
-                            rate_change($(doms.js_video));
+            percent = Math.max(0, Math.min(1, percent));
+            var index = now_playIndex;
+            var time = percent * videoDuration;
+            if (default_opts.merge) {
+                index = sources.length - 1;
+                time = sources[index].duration;
+                if (percent < 1) {
+                    var target = percent * totalDuration;
+                    for (var i = 0; i < sources.length; i++) {
+                        if (target < sources[i].offset + sources[i].duration) {
+                            index = i;
+                            time = target - sources[i].offset;
                             break;
+                        }
                     }
-                    allowBarChange = true;
-                    updateProgressWidth(percent);
                 }
             }
-
+            changeSource(index, time, shouldPlay, false);
         }
-
         function formatTime(seconds) {
-            minutes = Math.floor(seconds / 60);
-            minutes = (minutes >= 10) ? minutes : "0" + minutes;
+            if (!isFinite(seconds) || seconds == null || seconds < 0) return '--:--';
+            var minutes = Math.floor(seconds / 60);
             seconds = Math.floor(seconds % 60);
-            seconds = (seconds >= 10) ? seconds : "0" + seconds;
-            return minutes + ":" + seconds;
+            return (minutes < 10 ? '0' : '') + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
         }
         function viewContorls(ms) {
-            if (timer) {
-                clearTimeout(timer);
-                timer = 0;
-            }
-
-            showControls()
-            doms.dom_videoContainer.find('.videoContainer').css('cursor', 'auto');
+            clearTimeout(timer);
+            showControls();
             timer = setTimeout(function () {
-                hideControls();
-                doms.dom_videoContainer.find('.videoContainer').css('cursor', 'none');
-            }, ms)
+                if (!destroyed && !doms.dom_videoContainer.find('.setting_div').is(':visible')) hideControls();
+            }, ms);
         }
-        function showControls() {
-            doms.dom_videoContainer.find('.control').fadeIn(150);
+        function showControls() { doms.dom_videoContainer.find('.control').stop(true, true).fadeIn(150); }
+        function hideControls() { doms.dom_videoContainer.find('.control').stop(true, true).fadeOut(150); }
+        function syncVolume() {
+            if (destroyed) return;
+            var volume = doms.js_video.muted ? 0 : doms.js_video.volume * 100;
+            doms.dom_videoContainer.find('.volume-slider').val(volume);
+            doms.dom_videoContainer.find('.toggle-sound').html(volume > 0 ? g.laba_on : g.laba_off);
         }
-        function hideControls() {
-            doms.dom_videoContainer.find('.control').fadeOut(150);
-        }
-        function setVolume($volume) {
-            doms.js_video.volume = $volume / 100.0;
-            var s = doms.dom_videoContainer.find(".volume-slider").val($volume);
-            //console.log($volume);
-            if ($volume == 0) {
-                doms.dom_videoContainer.find(".toggle-sound").html(g.laba_off);
-            }
-            else {
-                doms.dom_videoContainer.find(".toggle-sound").html(g.laba_on);
-            }
+        function setVolume(volume) {
+            volume = isFinite(volume) ? Math.max(0, Math.min(100, volume)) : 100;
+            doms.js_video.volume = volume / 100;
+            syncVolume();
         }
         function rate_change(video_dom) {
-            var rate = doms.dom_videoContainer.find('.play_speed_select').val();
-            video_dom[0].playbackRate = parseFloat(rate);
+            var rate = parseFloat(doms.dom_videoContainer.find('.play_speed_select').val());
+            try { video_dom[0].playbackRate = rate; }
+            catch (error) { showStatus('此瀏覽器不支援所選的播放速度。'); }
         }
         function playVideo() {
-            if (doms.js_video.paused) {
-                doms.js_video.play();
-                rate_change($(doms.js_video));
-
-                doms.dom_videoContainer.find(".play").text("❚❚");
-                doms.dom_videoContainer.find(".play").removeClass("video-play");
-                doms.dom_videoContainer.find(".play").addClass("video-pause");
-
-            }
-            else {
+            if (destroyed || !sources.length) return;
+            retryMetadata();
+            if (shouldPlay || !doms.js_video.paused) {
+                shouldPlay = false;
+                playSequence++;
+                playPending = false;
                 doms.js_video.pause();
-                doms.dom_videoContainer.find(".play").text("►");
-                doms.dom_videoContainer.find(".play").addClass("video-play");
-                doms.dom_videoContainer.find(".play").removeClass("video-pause");
+                syncPlayButton();
+                return;
             }
+            if (playbackError) {
+                changeSource(now_playIndex, retryTime, true, true);
+            } else if (doms.js_video.ended && now_playIndex === sources.length - 1) {
+                changeSource(0, 0, true, true);
+            } else {
+                shouldPlay = true;
+                safePlay();
+            }
+        }
+        function rebuildTimeline() {
+            var total = 0;
+            timelineReady = true;
+            for (var i = 0; i < sources.length; i++) {
+                sources[i].offset = timelineReady ? total : null;
+                if (!validDuration(sources[i].duration)) timelineReady = false;
+                else total += sources[i].duration;
+            }
+            totalDuration = timelineReady ? total : NaN;
+            var bar = doms.dom_videoContainer.find('.progress-event-bar').empty();
+            if (default_opts.merge && default_opts.event && timelineReady && total > 0) {
+                for (var i = 0; i < sources.length; i++) {
+                    var events = sources[i].events;
+                    if (!$.isArray(events)) continue;
+                    for (var j = 0; j < events.length; j++) {
+                        var percent = Number(events[j].event_percent);
+                        if (!isFinite(percent) || percent < 0 || percent > 1) continue;
+                        var time = sources[i].offset + sources[i].duration * percent;
+                        events[j].event_ct = time;
+                        // 標記文字可能來自外部資料，透過 DOM 設定屬性，避免混入 HTML。
+                        $('<div class="myvideo-event-marker"></div>').attr('title', events[j].datetime || '')
+                            .css('left', (time / total * 100) + '%').appendTo(bar);
+                    }
+                }
+            }
+            videoTimeUpdateHandler();
+            if (!playbackError) showMetadataStatus();
+        }
+        function releaseVideo(video) {
+            if (!video) return;
+            video.onloadedmetadata = video.oncanplay = video.onerror = null;
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+            if (video.parentNode) video.parentNode.removeChild(video);
+        }
+        function auxiliaryVideo(className, preload) {
+            var video = document.createElement('video');
+            video.className = className;
+            video.style.display = 'none';
+            video.setAttribute('aria-hidden', 'true');
+            video.setAttribute('playsinline', '');
+            video.preload = preload;
+            video.muted = true;
+            var crossOrigin = doms.js_video.getAttribute('crossorigin');
+            if (crossOrigin != null) video.setAttribute('crossorigin', crossOrigin);
+            document.body.appendChild(video);
+            return video;
+        }
+        function clearPreload() {
+            clearTimeout(preloadTimer);
+            preloadTimer = null;
+            releaseVideo(preloadVideo);
+            preloadVideo = null;
+            preloadIndex = -1;
+        }
+        function preloadNextVideo() {
+            if (destroyed) return;
+            var index = now_playIndex + 1;
+            if (index >= sources.length) index = default_opts.loop ? 0 : -1;
+            if (!default_opts.preloadNext || sources.length < 2 || index < 0) { clearPreload(); return; }
+            if (index === preloadIndex || index === preloadFailedIndex) return;
+            clearPreload();
+            preloadIndex = index;
+            var video = preloadVideo = auxiliaryVideo('myvideo-preload', 'auto');
+            video.onloadedmetadata = function () {
+                if (destroyed || video !== preloadVideo) return;
+                if (sources[index].duration == null && validDuration(video.duration)) {
+                    sources[index].duration = video.duration;
+                    rebuildTimeline();
+                }
+            };
+            video.oncanplay = function () { clearTimeout(preloadTimer); preloadTimer = null; };
+            function failed() {
+                if (destroyed || video !== preloadVideo) return;
+                preloadFailedIndex = index;
+                warn('第 ' + (index + 1) + ' 段預載未完成，切換時將正常載入。');
+                clearPreload();
+            }
+            video.onerror = failed;
+            preloadTimer = setTimeout(failed, default_opts.loadTimeout);
+            video.src = sources[index].url;
+            video.load();
+        }
+        function loadMetadata(index) {
+            var source = sources[index];
+            source.metadataState = 'loading';
+            var probe = {video: auxiliaryVideo('myvideo-metadata', 'metadata'), timer: null};
+            probes.push(probe);
+            function finish(error) {
+                if (!probe.video) return;
+                var duration = probe.video.duration;
+                clearTimeout(probe.timer);
+                releaseVideo(probe.video);
+                probe.video = null;
+                if (destroyed) return;
+                if ((!error && validDuration(duration)) || validDuration(source.duration)) {
+                    if (!validDuration(source.duration)) source.duration = duration;
+                    source.metadataState = 'ready';
+                    rebuildTimeline();
+                } else {
+                    source.metadataState = 'error';
+                    showStatus('無法讀取第 ' + (index + 1) + ' 段長度，請按播放重試。');
+                    warn('第 ' + (index + 1) + ' 段 metadata 載入失敗。');
+                }
+                pumpMetadata();
+            }
+            probe.video.onloadedmetadata = function () { finish(false); };
+            probe.video.onerror = function () { finish(true); };
+            probe.timer = setTimeout(function () { finish(true); }, default_opts.loadTimeout);
+            probe.video.src = source.url;
+            probe.video.load();
+        }
+        function pumpMetadata() {
+            if (destroyed) return;
+            var active = 0;
+            for (var i = 0; i < probes.length; i++) if (probes[i].video) active++;
+            // 只同時探測兩段長度，避免長播放清單搶占目前影片的連線。
+            for (var i = 0; i < sources.length && active < 2; i++) {
+                if (i !== now_playIndex && sources[i].duration == null && !sources[i].metadataState) {
+                    loadMetadata(i);
+                    active++;
+                }
+            }
+        }
+        function retryMetadata() {
+            for (var i = 0; i < sources.length; i++) {
+                if (sources[i].metadataState === 'error') sources[i].metadataState = null;
+            }
+            pumpMetadata();
         }
         function load_videos(video_dom) {
-
-            var sdom = video_dom.find("source");
-            for (var i = 0, max_i = sdom.length; i < max_i; i++) {
-                var d = new Object();
-                d['url'] = sdom.eq(i).attr('src');
-
-                if (sdom.eq(i).attr('req_duration') != null) {
-                    d['duration'] = parseFloat(sdom.eq(i).attr('req_duration'));
-                    videoDuration += d['duration'];
+            video_dom.find('source').each(function () {
+                var source = {url: $(this).attr('src'), duration: null, events: null};
+                if (!source.url) return;
+                var duration = parseFloat($(this).attr('req_duration'));
+                if (validDuration(duration)) source.duration = duration;
+                var events = $(this).attr('req_events');
+                if (events) {
+                    try { source.events = JSON.parse(atob(events)); }
+                    catch (error) { warn('忽略無法解析的事件標記資料。'); }
                 }
-                else {
-                    d['duration'] = null;
-                }
-
-                if (sdom.eq(i).attr('req_events') != null) {
-                    d['events'] = JSON.parse(atob(sdom.eq(i).attr('req_events')));
-                }
-                else {
-                    d['events'] = null;
-                }
-                sources.push(d);
-            }
-            /*video_dom[0].onloadedmetadata = function(){                              
-              videoDuration += video_dom[0].duration;          
-              //console.log("GG:"+video_dom[0].duration);
-              sources[0]['duration']=video_dom[0].duration;          
-            };
-            */
-            video_dom.attr('src', sources[0]['url']);
-            videoCurrentTime = video_dom[0].currentTime;
-            //if(default_opts.merge)
-            //{
-            //2022-06-07 在此生成 events 操作
-            var event_ct = 0;
-            var ct = 0;
-            for (var i = 0, max_i = sources.length; i < max_i; i++) {
-                if (sources[i]["duration"] == null) {
-                    var g = document.createElement("video");
-                    $(g).attr('req_index', i);
-                    g.onloadedmetadata = function () {
-                        videoDuration += this.duration;
-                        //console.log( $(this).attr('index') );
-                        //console.log("GG_:"+this.duration);
-                        var index = $(this).attr('req_index');
-                        var duration = this.duration;
-                        sources[index]['duration'] = duration;
-                        this.remove();
-                    };
-                    g.style.display = "none";
-                    g.src = sources[i]['url'];
-                    document.body.appendChild(g);
-                }
-                else {
-
-                    //console.log(default_opts);
-                    //alert($.isArray(sources[i]["events"]));
-                    if (default_opts.merge == true && default_opts.event == true && $.isArray(sources[i]["events"])) {
-                        //console.log(sources[i]["events"]);
-                        for (var j = 0, max_j = sources[i]["events"].length; j < max_j; j++) {
-                            event_ct = ct + sources[i]["duration"] * sources[i]["events"][j]["event_percent"];
-                            sources[i]["events"][j]["event_ct"] = event_ct;
-                            //console.log("event_ct: "+event_ct);                
-                        }
-                        ct += sources[i]["duration"];
-                    }
-                }
-            }
-
-            //event 資料收集完成 轉成 dom 按鈕
-
-            for (var i = 0, max_i = sources.length; i < max_i; i++) {
-                if (default_opts.merge == true && default_opts.event == true && $.isArray(sources[i]["events"])) {
-                    var $this = doms.dom_videoContainer.find(".progress");
-                    var $this_event_bar = doms.dom_videoContainer.find(".progress-event-bar");
-                    for (var j = 0, max_j = sources[i]["events"].length; j < max_j; j++) {
-                        //換簡 event_ct 在 ct 的多少，然後換成成要 left 多少
-
-                        //console.log($this.width());
-                        var event_ct = sources[i]["events"][j]['event_ct'];
-                        var dt = sources[i]["events"][j]['datetime'];
-                        console.log(sources[i]["events"][j]);
-                        var Left = arduino_map(event_ct, 0, ct, 0.0, parseFloat(100.0));
-                        Left = Left.toFixed(2);
-                        //console.log("event_ct:"+ event_ct+",ct:"+ct);
-                        //console.log(Left); 
-                        //放入 div
-                        $this_event_bar.append("<div alt=\"" + dt + "\" title=\"" + dt + "\" style='z-index:1000;display:inline;width:3px;height:100%;background-color:orange;position:absolute;left:" + Left + "%;'></div>");
-
-                    }
-                }
-            }
-            $this_event_bar.find("div").mouseover(function (e) {
-                console.log($(this).attr('title'));
-
+                sources.push(source);
             });
+            if (!sources.length && original.src) sources.push({url: original.src, duration: null, events: null});
+            if (!sources.length) { showStatus('沒有可播放的影片來源。'); return; }
+            rebuildTimeline();
+            changeSource(0, 0, false, true);
+            pumpMetadata();
+        }
+        function destroy(restore) {
+            if (destroyed) return;
+            destroyed = true;
+            shouldPlay = false;
+            playSequence++;
+            sourceSequence++;
+            clearTimeout(timer);
+            clearTimeout(loadTimer);
+            if (removalObserver) removalObserver.disconnect();
+            $(document).off(ns);
+            $(window).off(ns);
+            thIs.off(ns).removeData('myVideo');
+            doms.dom_videoContainer.off(ns).find('*').off(ns).stop(true, true);
+            clearPreload();
+            for (var i = 0; i < probes.length; i++) {
+                clearTimeout(probes[i].timer);
+                releaseVideo(probes[i].video);
+                probes[i].video = null;
+            }
+            doms.js_video.pause();
+            if (restore !== false) {
+                doms.dom_videoContainer.before(thIs);
+                doms.dom_videoContainer.remove();
+                thIs.prop('controls', original.controls).prop('loop', original.loop);
+                $.each(['src', 'poster', 'preload'], function (_, key) {
+                    if (original[key] == null) thIs.removeAttr(key);
+                    else thIs.attr(key, original[key]);
+                });
+            } else {
+                doms.js_video.preload = 'none';
+                doms.js_video.removeAttribute('src');
+            }
+            doms.js_video.load();
         }
         var run = function (video_dom) {
+            default_opts.loadTimeout = Number(default_opts.loadTimeout);
+            if (!isFinite(default_opts.loadTimeout) || default_opts.loadTimeout <= 0) default_opts.loadTimeout = 15000;
             init_ui(video_dom);
             init_events(video_dom);
             //start load first movie
             load_videos(video_dom);
+            if (window.MutationObserver) {
+                var wasConnected = $.contains(document.documentElement, video_dom[0]);
+                removalObserver = new MutationObserver(function () {
+                    var connected = $.contains(document.documentElement, video_dom[0]);
+                    if (wasConnected && !connected) destroy(false);
+                    wasConnected = connected;
+                });
+                removalObserver.observe(document.documentElement, {childList: true, subtree: true});
+            }
         }
         function resize(w, h) {
             default_opts.width = w;
@@ -759,6 +768,8 @@
             */
         }
         //preset
+        this.destroy = function () { destroy(true); return thIs; };
+        this.data('myVideo', {destroy: this.destroy, getSource: this.getSource});
         init(thIs, opts);
         return this;
     };
