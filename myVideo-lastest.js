@@ -770,9 +770,24 @@
             doms.dom_videoContainer.find(".canvas").attr('height',default_opts.height);
             */
         }
+        // 外部事件清單與播放器使用相同的時間軸及切段流程。
+        this.seek = function (seconds) {
+            seconds = Number(seconds);
+            if (destroyed || !isFinite(seconds) || !validDuration(videoDuration) || (default_opts.merge && !timelineReady)) return thIs;
+            $(doms.js_video).attr('poster', '');
+            updateVideoTime(seconds / videoDuration);
+            return thIs;
+        };
+        this.getCurrentTime = function () {
+            if (destroyed || !sources.length) return NaN;
+            var source = sources[now_playIndex];
+            var time = pendingTime != null ? pendingTime : doms.js_video.currentTime;
+            if (!default_opts.merge) return time;
+            return timelineReady ? source.offset + Math.min(time, source.duration) : NaN;
+        };
         //preset
         this.destroy = function () { destroy(true); return thIs; };
-        this.data('myVideo', {destroy: this.destroy, getSource: this.getSource});
+        this.data('myVideo', {destroy: this.destroy, getSource: this.getSource, seek: this.seek, getCurrentTime: this.getCurrentTime});
         init(thIs, opts);
         return this;
     };
