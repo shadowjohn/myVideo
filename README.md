@@ -3,7 +3,7 @@ myVideo
 
 我的 Html5 Video 播放機，基於jQuery Plugin方式撰寫。
 
-## V0.5（2026-11-03）
+## V0.05（2026-11-03）
 
 沿用原本的 jQuery 與 `<video><source>` 用法，無須 jQuery UI。設定面板新增「循環播放」與「預載下一段」，兩者預設勾選。
 
@@ -34,7 +34,7 @@ player.destroy();
 
 `getSource()` 的既有用法保留；事件標記會在片長就緒後依所有前段的累積長度計算。傳入的 `req_events` 仍是 Base64 編碼的 JSON 陣列。
 
-V0.5 修正：
+V0.05 修正：
 
 - 靜音解除後正確還原音量，不再反覆縮小。
 - 進度條在區域外放開滑鼠後結束拖曳，並支援 Pointer Events 觸控拖曳。
@@ -45,7 +45,7 @@ V0.5 修正：
 
 驗證：Chromium、jQuery 3.7.1 與 1.8.3。使用獨立瀏覽器環境、允許快取、每次影片請求延遲 350 ms，提供 1.4 秒預載時間，開關各量測三次；接段至第一個影格的中位數為關閉約 806 ms、開啟約 127 ms。這是受控條件的結果，並非所有網路環境的速度保證；Safari 與真機行動瀏覽器尚未驗證。
 
-固定版本：`myVideo-0.5.js`。`myVideo-lastest.js` 同步為相同內容；舊版 `0.1`～`0.4` 保留。
+固定版本：`myVideo-0.05.js`。`myVideo-lastest.js` 同步為相同內容；歷史檔案 `myVideo-0.1.js`～`myVideo-0.4.js` 保留。
 
 ---
 
@@ -70,7 +70,7 @@ V0.5 修正：
     Feather Mountain(羽山) <a target="_blank" href="https://3wa.tw">https://3wa.tw</a>
     <br>
     版本：<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;V 0.5<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;V 0.05<br>
     最後更新時間：<br>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2026-11-03<br>
     License：<br>
@@ -182,9 +182,9 @@ ffprobe 20200911_1599793208459_1599789604914.mp4 -show_streams -select_streams v
   <h2 class="title">ChangeLog</h2>
   <div style="text-align:left;">
     <pre style="margin-left:20px;">
-* Tue Nov 03 2026 Feather Mountain &lt;https://3wa.tw&gt; 0.5
+* Tue Nov 03 2026 Feather Mountain &lt;https://3wa.tw&gt; 0.05
 - 新增預設啟用的循環播放與下一段預載
-- 修正音量、時間軸跳轉、事件標記、播放錯誤與資源清理，詳見上方 V0.5 說明
+- 修正音量、時間軸跳轉、事件標記、播放錯誤與資源清理，詳見上方 V0.05 說明
 
 * Tus Oct 17 2023 Feather Mountain &lt;https://3wa.tw&gt; 0.04
 - 加入拖拉 Bar 的功能

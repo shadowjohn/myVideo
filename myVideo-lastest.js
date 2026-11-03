@@ -1,6 +1,6 @@
 /*!
  * jQuery myVideo plugin
- * Version 0.5 (03-Nov-2026)
+ * Version 0.05 (03-Nov-2026)
  * @requires jQuery v1.7 or later
  *
  * Examples at: http://3wa.tw/demo/htm/myVideo
@@ -28,7 +28,7 @@
         var previous = this.data('myVideo');
         if (previous) previous.destroy();
         var thIs = this;
-        var VERSION = 0.5;
+        var VERSION = '0.05';
         var ns = '.myVideo' + (++instanceId);
         var original = {src: this.attr('src'), poster: this.attr('poster'), preload: this.attr('preload'), controls: this.prop('controls'), loop: this.prop('loop')};
         var doms = {

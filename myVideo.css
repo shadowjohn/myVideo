@@ -362,7 +362,7 @@
   border:2px solid #fff; 
 }
 /* 播放清單 */
-/* V0.5：設定、觸控拖曳與載入狀態只作用於新版播放器。 */
+/* V0.05：設定、觸控拖曳與載入狀態只作用於新版播放器。 */
 .videoContainer.myvideo-v05 .setting_div {
   height: auto;
   min-height: 0;
