@@ -493,6 +493,7 @@
                 }
             }
             changeSource(index, time, shouldPlay, false);
+            thIs.triggerHandler('myvideo:seek');
         }
         function formatTime(seconds) {
             if (!isFinite(seconds) || seconds == null || seconds < 0) return '--:--';
