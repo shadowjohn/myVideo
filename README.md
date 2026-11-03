@@ -32,7 +32,7 @@ player.destroy();
 
 `req_duration` 應是有效的正數秒數，提供後用作時間軸長度。可用 `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "movie.mp4"` 查詢。不提供或提供無效值時會自動讀取影片片長；所有片長就緒前不開放合併時間軸跳轉。
 
-`getSource()` 的既有用法保留；事件標記會在片長就緒後依所有前段的累積長度計算。傳入的 `req_events` 仍是 Base64 編碼的 JSON 陣列。
+`getSource()` 的既有用法保留；事件標記會在片長就緒後依所有前段的累積長度計算。點擊標記會直接跳到該事件時間，避免長影片的進度條像素誤差。傳入的 `req_events` 仍是 Base64 編碼的 JSON 陣列。
 
 V0.05 修正：
 

@@ -269,7 +269,7 @@
                 if (e.button != null && e.button !== 0) return;
                 dragging = true;
                 pointerId = e.originalEvent ? e.originalEvent.pointerId : e.pointerId;
-                scrubberMouseDownHandler(e);
+                scrubberMouseDownHandler(e, true);
             });
             $(document).on(move + ns, function (e) {
                 var id = e.originalEvent ? e.originalEvent.pointerId : e.pointerId;
@@ -455,7 +455,7 @@
             doms.dom_videoContainer.find('.ttime').text(formatTime(videoDuration));
             updateProgressWidth(validDuration(videoDuration) ? ct / videoDuration : 0);
         }
-        function scrubberMouseDownHandler(e) {
+        function scrubberMouseDownHandler(e, snapToMarker) {
             if (destroyed || !validDuration(videoDuration)) return;
             if (default_opts.merge && !timelineReady) return;
             var bar = doms.dom_videoContainer.find('.progress');
@@ -465,7 +465,9 @@
             e.preventDefault();
             e.stopPropagation();
             $(doms.js_video).attr('poster', '');
-            updateVideoTime((pageX - bar.offset().left) / bar.width());
+            var marker = snapToMarker ? $(e.target).closest('.myvideo-event-marker') : $();
+            var markerPercent = Number(marker.attr('data-myvideo-percent'));
+            updateVideoTime(marker.length && isFinite(markerPercent) ? markerPercent : (pageX - bar.offset().left) / bar.width());
         }
         function updateProgressWidth(percent) {
             if (!doms.dom_progress) return;
@@ -564,6 +566,7 @@
                         events[j].event_ct = time;
                         // 標記文字可能來自外部資料，透過 DOM 設定屬性，避免混入 HTML。
                         $('<div class="myvideo-event-marker"></div>').attr('title', events[j].datetime || '')
+                            .attr('data-myvideo-percent', time / total)
                             .css('left', (time / total * 100) + '%').appendTo(bar);
                     }
                 }
